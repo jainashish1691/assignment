@@ -45,14 +45,6 @@ public class UserController
         return userService.createPost(userId, postInDTO);
     }
 
-    @GetMapping(value = "/{userId}/post")
-    @ResponseBody
-    public PostOutDTO getNewsFeed(@PathVariable Integer userId, @RequestBody @Valid PostInDTO postInDTO)
-    // @formatter:on
-    {
-        return userService.createPost(userId, postInDTO);
-    }
-
     @PostMapping(value = "/{userId}/follow/{followeeId}")
     @ResponseBody
     public void follow(@PathVariable Integer userId, @PathVariable Integer followeeId)
@@ -66,7 +58,7 @@ public class UserController
     public List<PostOutDTO> getMostRecentNewsFeed(@PathVariable Integer userId)
     // @formatter:on
     {
-        return userService.finMostRecentPost(userId);
+        return userService.getMostRecentPost(userId);
     }
 
 }

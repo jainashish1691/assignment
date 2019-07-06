@@ -1,5 +1,6 @@
 package com.assignment.cs.business.service.impl;
 
+import com.assignment.cs.business.exception.BadRequestException;
 import com.assignment.cs.business.exception.NotFoundException;
 import com.assignment.cs.business.service.UserService;
 import com.assignment.cs.db.dao.PostDAO;
@@ -12,6 +13,7 @@ import com.assignment.cs.dto.PostInDTO;
 import com.assignment.cs.dto.PostOutDTO;
 import com.assignment.cs.dto.UserInDTO;
 import com.assignment.cs.dto.UserOutDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
 public class UserServiceImpl implements UserService
 {
     private final UserDAO userDAO;
@@ -72,6 +75,12 @@ public class UserServiceImpl implements UserService
     @Override
     public void follow(Integer followerId, Integer followeeId)
     {
+        if (followerId.equals(followeeId))
+        {
+            log.error("Follower And followee Cannot Be Same");
+            throw new BadRequestException();
+        }
+
         final Optional<UserEntity> followerOptional = userDAO.findById(followerId);
         final UserEntity follower = followerOptional.orElseThrow(NotFoundException::new);
 
@@ -86,7 +95,7 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public List<PostOutDTO> finMostRecentPost(final Integer userID)
+    public List<PostOutDTO> getMostRecentPost(final Integer userID)
     {
         final Optional<UserEntity> userOptional = userDAO.findById(userID);
 
