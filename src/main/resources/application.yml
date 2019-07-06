@@ -1,0 +1,12 @@
+# GLOBAL CONFIGURATION
+spring:
+  application:
+    name: cs-assignment
+  jpa:
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    change-log: classpath:/liquibase/changelog.xml
+    enabled: true
+server:
+   port: 8080

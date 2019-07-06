@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="1" author="ashish">
+        <createTable tableName="user">
+
+            <column name="id" type="smallint" autoIncrement="true" startWith="1" incrementBy="1">
+                <constraints primaryKey="true" primaryKeyName="user_pk" nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <createTable tableName="post">
+
+            <column name="id" type="smallint" autoIncrement="true" startWith="1" incrementBy="1">
+                <constraints primaryKey="true" primaryKeyName="post_pk" nullable="false"/>
+            </column>
+
+            <column name="contents" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="timestamp" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="ref_user" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+
+        <addForeignKeyConstraint baseColumnNames="ref_user"
+                                 baseTableName="post"
+                                 constraintName="fk_post_ref_user"
+                                 referencedColumnNames="id"
+                                 referencedTableName="user"/>
+
+
+        <createTable tableName="user_to_user">
+
+            <column name="id" type="smallint" autoIncrement="true" startWith="1" incrementBy="1">
+                <constraints primaryKey="true" primaryKeyName="user_to_user_pk" nullable="false"/>
+            </column>
+
+            <column name="follower" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="followee" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="follower"
+                                 baseTableName="user_to_user"
+                                 constraintName="fk_user_to_user_follower"
+                                 referencedColumnNames="id"
+                                 referencedTableName="user"/>
+
+        <addForeignKeyConstraint baseColumnNames="followee"
+                                 baseTableName="user_to_user"
+                                 constraintName="fk_user_to_user_followee"
+                                 referencedColumnNames="id"
+                                 referencedTableName="user"/>
+
+
+    </changeSet>
+
+</databaseChangeLog>
