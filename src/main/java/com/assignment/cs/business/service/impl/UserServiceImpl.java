@@ -75,6 +75,7 @@ public class UserServiceImpl implements UserService
     @Override
     public void follow(Integer followerId, Integer followeeId)
     {
+
         if (followerId.equals(followeeId))
         {
             log.error("Follower And followee Cannot Be Same");
@@ -87,11 +88,23 @@ public class UserServiceImpl implements UserService
         final Optional<UserEntity> followeeOptional = userDAO.findById(followeeId);
         final UserEntity followee = followeeOptional.orElseThrow(NotFoundException::new);
 
+        validateIfUserAlreadyFollowingFollowee(follower, followee);
+
         final UserToUserRelationEntity userToUserRelationEntity = new UserToUserRelationEntity();
         userToUserRelationEntity.setFollower(follower);
         userToUserRelationEntity.setFollowee(followee);
         userToUserRelationDAO.save(userToUserRelationEntity);
 
+    }
+
+    @Override
+    public void unFollow(Integer followerId, Integer followeeId)
+    {
+        final UserEntity follower = getUserById(followerId);
+        final UserEntity followee = getUserById(followeeId);
+        final Optional<UserToUserRelationEntity> optional = userToUserRelationDAO.findByFollowerAndFollowee(follower, followee);
+        final UserToUserRelationEntity userToUserRelation = optional.orElseThrow(NotFoundException::new);
+        userToUserRelationDAO.delete(userToUserRelation);
     }
 
     @Override
@@ -121,6 +134,12 @@ public class UserServiceImpl implements UserService
         return createOutDTOList(mostRecentFeeds);
     }
 
+    private UserEntity getUserById(final Integer userId)
+    {
+        final Optional<UserEntity> userOptional = userDAO.findById(userId);
+        return userOptional.orElseThrow(NotFoundException::new);
+    }
+
     private List<PostOutDTO> createOutDTOList(final List<PostEntity> mostRecentFeeds)
     {
         final List<PostOutDTO> posts = new ArrayList<>();
@@ -145,4 +164,16 @@ public class UserServiceImpl implements UserService
         postOutDTO.setTimeStamp(post.getTimeStamp());
         return postOutDTO;
     }
+
+    private void validateIfUserAlreadyFollowingFollowee(UserEntity follower, UserEntity followee)
+    {
+        final Optional<UserToUserRelationEntity> optional = userToUserRelationDAO.findByFollowerAndFollowee(follower, followee);
+        if (optional.isPresent())
+        {
+            log.error("User is already following given followee");
+            throw new BadRequestException();
+        }
+
+    }
+
 }

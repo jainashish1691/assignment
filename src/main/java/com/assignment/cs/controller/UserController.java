@@ -8,6 +8,7 @@ import com.assignment.cs.dto.UserOutDTO;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -31,7 +32,7 @@ public class UserController
 
     @GetMapping(value = "/{userId}")
     @ResponseBody
-    public UserOutDTO getUser(@PathVariable Integer userId)
+    public UserOutDTO getUser(@PathVariable @NotNull Integer userId)
     // @formatter:on
     {
         return userService.getUser(userId);
@@ -47,7 +48,7 @@ public class UserController
 
     @PostMapping(value = "/{userId}/follow/{followeeId}")
     @ResponseBody
-    public void follow(@PathVariable Integer userId, @PathVariable Integer followeeId)
+    public void follow(@PathVariable Integer userId, @PathVariable @NotNull Integer followeeId)
     // @formatter:on
     {
         userService.follow(userId, followeeId);
@@ -55,10 +56,18 @@ public class UserController
 
     @GetMapping(value = "/{userId}/newsFeeds")
     @ResponseBody
-    public List<PostOutDTO> getMostRecentNewsFeed(@PathVariable Integer userId)
+    public List<PostOutDTO> getMostRecentNewsFeed(@PathVariable @NotNull Integer userId)
     // @formatter:on
     {
         return userService.getMostRecentPost(userId);
+    }
+
+    @DeleteMapping(value = "/{userId}/unFollow/{followeeId}")
+    @ResponseBody
+    public void unFollow(@PathVariable @NotNull Integer userId, @PathVariable @NotNull Integer followeeId)
+    // @formatter:on
+    {
+        userService.unFollow(userId, followeeId);
     }
 
 }

@@ -17,5 +17,8 @@ public interface UserService
 
     void follow(final Integer followerId, final Integer followeeId);
 
+    void unFollow(final Integer followerId, final Integer followeeId);
+
+
     List<PostOutDTO> getMostRecentPost(final Integer userID);
 }
