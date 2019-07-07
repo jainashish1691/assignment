@@ -96,6 +96,7 @@ public class UserServiceImpl implements UserService
         userToUserRelationEntity.setFollower(follower);
         userToUserRelationEntity.setFollowee(followee);
         userToUserRelationDAO.save(userToUserRelationEntity);
+        log.info("User successfully followed ");
 
     }
 
