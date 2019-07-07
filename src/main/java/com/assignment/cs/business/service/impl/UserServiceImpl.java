@@ -35,6 +35,8 @@ public class UserServiceImpl implements UserService
 
     private final UserToUserRelationDAO userToUserRelationDAO;
 
+    private static final int MAX_SIZE_OF_FEEDS = 20;
+
     public UserServiceImpl(UserDAO userDAO, PostDAO postDAO, UserToUserRelationDAO userToUserRelationDAO)
     {
         this.userDAO = userDAO;
@@ -73,7 +75,7 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public void follow(Integer followerId, Integer followeeId)
+    public void follow(final Integer followerId, final Integer followeeId)
     {
 
         if (followerId.equals(followeeId))
@@ -98,7 +100,7 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public void unFollow(Integer followerId, Integer followeeId)
+    public void unFollow(final Integer followerId, final Integer followeeId)
     {
         final UserEntity follower = getUserById(followerId);
         final UserEntity followee = getUserById(followeeId);
@@ -113,23 +115,25 @@ public class UserServiceImpl implements UserService
         final Optional<UserEntity> userOptional = userDAO.findById(userID);
 
         final UserEntity user = userOptional.orElseThrow(NotFoundException::new);
-        final List<PostEntity> posts = user.getPosts();        //posts of the user
+        final List<PostEntity> allPostsByUser = user.getPosts();        //posts of the user
 
         final List<UserToUserRelationEntity> allByFollower = userToUserRelationDAO.findAllByFollower(user);
 
-        //followee list of user
+        //followee list of user which user follows
         final List<UserEntity> followeeList = allByFollower.stream().map(UserToUserRelationEntity::getFollowee).collect(Collectors.toList());
 
-        final List<List<PostEntity>> collect = followeeList.stream().map(UserEntity::getPosts).collect(Collectors.toList());
-        final List<PostEntity> postsByFollowee = collect.stream().flatMap(Collection::stream).collect(Collectors.toList());// posts of all the followee
+        //collect all posts from followee's
+        final List<PostEntity> allPostsByFollowee = followeeList.stream().map(UserEntity::getPosts).flatMap(Collection::stream).collect(Collectors.toList());// posts of all the followee
 
-        posts.addAll(postsByFollowee);//adding all the posts of followee to existing post of user
+        final List<PostEntity> newsFeeds = new ArrayList<>();
+        newsFeeds.addAll(allPostsByUser);
+        newsFeeds.addAll(allPostsByFollowee);
 
-        //sort post with time stamps
-        posts.sort((PostEntity p1, PostEntity p2) -> p2.getTimeStamp().compareTo(p1.getTimeStamp()));
+        //sort feeds with time stamps
+        newsFeeds.sort((PostEntity p1, PostEntity p2) -> p2.getTimeStamp().compareTo(p1.getTimeStamp()));
 
         //limit the result to max size of 20
-        final List<PostEntity> mostRecentFeeds = posts.stream().limit(20).collect(Collectors.toList());
+        final List<PostEntity> mostRecentFeeds = newsFeeds.stream().limit(MAX_SIZE_OF_FEEDS).collect(Collectors.toList());
 
         return createOutDTOList(mostRecentFeeds);
     }
@@ -165,7 +169,7 @@ public class UserServiceImpl implements UserService
         return postOutDTO;
     }
 
-    private void validateIfUserAlreadyFollowingFollowee(UserEntity follower, UserEntity followee)
+    private void validateIfUserAlreadyFollowingFollowee(final UserEntity follower, final UserEntity followee)
     {
         final Optional<UserToUserRelationEntity> optional = userToUserRelationDAO.findByFollowerAndFollowee(follower, followee);
         if (optional.isPresent())
