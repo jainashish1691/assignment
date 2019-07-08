@@ -6,7 +6,6 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -23,8 +22,5 @@ public class UserEntity implements Serializable
 
     @Column(name = "name")
     private String name;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<PostEntity> posts;
 
 }

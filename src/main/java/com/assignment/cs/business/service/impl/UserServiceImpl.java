@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,8 +33,6 @@ public class UserServiceImpl implements UserService
     private final PostDAO postDAO;
 
     private final UserToUserRelationDAO userToUserRelationDAO;
-
-    private static final int MAX_SIZE_OF_FEEDS = 20;
 
     public UserServiceImpl(UserDAO userDAO, PostDAO postDAO, UserToUserRelationDAO userToUserRelationDAO)
     {
@@ -116,25 +113,19 @@ public class UserServiceImpl implements UserService
         final Optional<UserEntity> userOptional = userDAO.findById(userID);
 
         final UserEntity user = userOptional.orElseThrow(NotFoundException::new);
-        final List<PostEntity> allPostsByUser = user.getPosts();        //posts of the user
 
         final List<UserToUserRelationEntity> allByFollower = userToUserRelationDAO.findAllByFollower(user);
 
         //followee list of user which user follows
         final List<UserEntity> followeeList = allByFollower.stream().map(UserToUserRelationEntity::getFollowee).collect(Collectors.toList());
 
-        //collect all posts from followee's
-        final List<PostEntity> allPostsByFollowee = followeeList.stream().map(UserEntity::getPosts).flatMap(Collection::stream).collect(Collectors.toList());// posts of all the followee
+        //combined list of user and its followee's
+        final List<UserEntity> userAndFollowee = new ArrayList<>();
+        userAndFollowee.add(user);
+        userAndFollowee.addAll(followeeList);
 
-        final List<PostEntity> newsFeeds = new ArrayList<>();
-        newsFeeds.addAll(allPostsByUser);
-        newsFeeds.addAll(allPostsByFollowee);
-
-        //sort feeds with time stamps
-        newsFeeds.sort((PostEntity p1, PostEntity p2) -> p2.getTimeStamp().compareTo(p1.getTimeStamp()));
-
-        //limit the result to max size of 20
-        final List<PostEntity> mostRecentFeeds = newsFeeds.stream().limit(MAX_SIZE_OF_FEEDS).collect(Collectors.toList());
+        //finds all post of users , sort them in descending order and fetch top 20 result
+        final List<PostEntity> mostRecentFeeds = postDAO.findTop20ByUserInOrderByTimeStampDesc(userAndFollowee);
 
         return createOutDTOList(mostRecentFeeds);
     }

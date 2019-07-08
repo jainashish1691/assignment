@@ -22,6 +22,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.times;
@@ -122,6 +125,32 @@ public class UserServiceTest
         userService.unFollow(1, 2);
         verify(userToUserRelationDAO, times(1)).delete(Mockito.any(UserToUserRelationEntity.class));
 
+    }
+
+    @Test
+    public void UST9_getMostRecentPostSuccess()
+    {
+        final UserEntity user = mockUserEntity();
+        final List<UserToUserRelationEntity> userRelationEntityList = mockUserRelation();
+        Mockito.when(userDAO.findById(Mockito.anyInt())).thenReturn(Optional.of(user));
+        Mockito.when(userToUserRelationDAO.findAllByFollower(user)).thenReturn(userRelationEntityList);
+        Mockito.when(postDAO.findTop20ByUserInOrderByTimeStampDesc(Mockito.anyList())).thenReturn(Collections.singletonList(getMockedPostEntity()));
+        final List<PostOutDTO> mostRecentPost = userService.getMostRecentPost(1);
+        Assert.assertNotNull(mostRecentPost);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void UST10_getMostRecentInvalidUsers()
+    {
+        Mockito.when(userDAO.findById(Mockito.anyInt())).thenReturn(Optional.empty());
+        userService.getMostRecentPost(1);
+    }
+
+    private List<UserToUserRelationEntity> mockUserRelation()
+    {
+        final UserToUserRelationEntity userToUserRelationEntityOne = new UserToUserRelationEntity();
+        userToUserRelationEntityOne.setFollowee(new UserEntity());
+        return Arrays.asList(userToUserRelationEntityOne);
     }
 
     private PostEntity getMockedPostEntity()
