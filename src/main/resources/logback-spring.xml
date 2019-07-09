@@ -4,7 +4,6 @@
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
     <!-- logs the SQL statements -->
-
     <logger name="org.hibernate.SQL" level="debug"/>
 
 

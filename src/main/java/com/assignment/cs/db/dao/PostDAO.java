@@ -11,6 +11,9 @@ public interface PostDAO extends JpaRepository<PostEntity, Integer>
 {
     List<PostEntity> findAllByUserInOrderByTimeStampDesc(final List<UserEntity> users, final Pageable pageable);
 
+    /*
+    finds all post of users and its followee , sort them in descending order and fetch top 20 result
+     */
     List<PostEntity> findTop20ByUserInOrderByTimeStampDesc(final List<UserEntity> users);
 
 }

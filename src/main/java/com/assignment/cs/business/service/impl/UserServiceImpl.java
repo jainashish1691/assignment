@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -111,22 +112,11 @@ public class UserServiceImpl implements UserService
     public List<PostOutDTO> getMostRecentPost(final Integer userID)
     {
         final Optional<UserEntity> userOptional = userDAO.findById(userID);
-
         final UserEntity user = userOptional.orElseThrow(NotFoundException::new);
-
         final List<UserToUserRelationEntity> allByFollower = userToUserRelationDAO.findAllByFollower(user);
-
-        //followee list of user which user follows
-        final List<UserEntity> followeeList = allByFollower.stream().map(UserToUserRelationEntity::getFollowee).collect(Collectors.toList());
-
-        //combined list of user and its followee's
-        final List<UserEntity> userAndFollowee = new ArrayList<>();
-        userAndFollowee.add(user);
-        userAndFollowee.addAll(followeeList);
-
-        //finds all post of users , sort them in descending order and fetch top 20 result
+        final List<UserEntity> followeeList = allByFollower.stream().map(UserToUserRelationEntity::getFollowee).collect(Collectors.toList());//followee list of user which user follows
+        final List<UserEntity> userAndFollowee = Stream.concat(followeeList.stream(), Stream.of(user)).collect(Collectors.toList());//combined list of user and its followee's
         final List<PostEntity> mostRecentFeeds = postDAO.findTop20ByUserInOrderByTimeStampDesc(userAndFollowee);
-
         return createOutDTOList(mostRecentFeeds);
     }
 
