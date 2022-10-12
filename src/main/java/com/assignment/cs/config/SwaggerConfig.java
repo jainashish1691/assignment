@@ -1,3 +1,4 @@
+/*
 package com.assignment.cs.config;
 
 import org.springframework.context.annotation.Bean;
@@ -19,4 +20,4 @@ public class SwaggerConfig
         return new Docket(DocumentationType.SWAGGER_2).select().apis(RequestHandlerSelectors.basePackage("com.assignment.cs.controller")).build();
     }
 
-}
+}*/
