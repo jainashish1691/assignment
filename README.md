@@ -1,23 +1,33 @@
-# assignment
+Here’s a JUnit test that uses Mockito to cover all conditions for the setFormula method in your TextTransformer class.
 
-To write a JUnit test using Mockito for the method removeConditionalFormattingCustom in your TextTransformer.java class, follow the steps below.
+The method setFormula involves several conditions:
 
-Here's an example of a test setup:
+1. If cellRef is null or does not have a valid SheetName, the method should return early.
+
+
+2. If getSheet returns null, a new sheet should be created.
+
+
+3. If getRow returns null, a new row should be created.
+
+
+4. If getCell returns null, a new cell should be created.
+
+
+5. Finally, the formula should be set on the cell, and an exception should be handled if it occurs.
+
+
+
+Here is the JUnit test using Mockito:
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.SheetConditionalFormatting;
-import org.apache.poi.ss.usermodel.ConditionalFormatting;
-import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.usermodel.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TextTransformerTest {
 
@@ -25,13 +35,16 @@ public class TextTransformerTest {
     private Workbook templateWorkbook;
 
     @Mock
-    private Sheet destSheet;
+    private Sheet sheet;
 
     @Mock
-    private SheetConditionalFormatting sheetConditionalFormatting;
+    private Row row;
 
     @Mock
-    private ConditionalFormatting conditionalFormatting;
+    private Cell cell;
+
+    @Mock
+    private Logger logger; // Assuming there's a getLogger() method returning a Logger
 
     @InjectMocks
     private TextTransformer textTransformer;
@@ -42,53 +55,71 @@ public class TextTransformerTest {
     }
 
     @Test
-    public void testRemoveConditionalFormattingCustom() {
-        String sheetName = "TestSheet";
-        CellRangeAddress areaRange = new CellRangeAddress(0, 10, 0, 5);
-        
-        when(templateWorkbook.getSheet(sheetName)).thenReturn(destSheet);
-        when(destSheet.getSheetConditionalFormatting()).thenReturn(sheetConditionalFormatting);
-        when(sheetConditionalFormatting.getNumConditionalFormattings()).thenReturn(1);
-        when(sheetConditionalFormatting.getConditionalFormattingAt(0)).thenReturn(conditionalFormatting);
-
-        List<CellRangeAddress> ranges = new ArrayList<>();
-        ranges.add(new CellRangeAddress(0, 10, 0, 5));
-        when(conditionalFormatting.getFormattingRanges()).thenReturn(ranges.toArray(new CellRangeAddress[0]));
-
-        // Call the method
-        textTransformer.removeConditionalFormattingCustom(new AreaRef(sheetName));
-
-        // Verify
-        verify(conditionalFormatting, times(1)).setFormattingRanges(any(CellRangeAddress[].class));
+    public void testSetFormula_NullCellRef() {
+        textTransformer.setFormula(null, "SUM(A1:A10)");
+        // Verify that nothing happens when cellRef is null
+        verifyNoInteractions(templateWorkbook, sheet, row, cell);
     }
-}
 
-Explanation:
+    @Test
+    public void testSetFormula_InvalidSheetName() {
+        CellRef cellRef = mock(CellRef.class);
+        when(cellRef.getSheetName()).thenReturn(null);
 
-1. Mocks Setup:
+        textTransformer.setFormula(cellRef, "SUM(A1:A10)");
+        // Verify that nothing happens when sheet name is null
+        verifyNoInteractions(templateWorkbook, sheet, row, cell);
+    }
 
-templateWorkbook, destSheet, sheetConditionalFormatting, and conditionalFormatting are mocked objects. We use @Mock annotations to mock them.
+    @Test
+    public void testSetFormula_SheetDoesNotExist() {
+        CellRef cellRef = mock(CellRef.class);
+        when(cellRef.getSheetName()).thenReturn("TestSheet");
 
-textTransformer is the class under test. We use @InjectMocks to inject the mocked dependencies into it.
+        // Simulate getSheet returning null, so it should try to create a new sheet
+        when(templateWorkbook.getSheet("TestSheet")).thenReturn(null);
+        when(templateWorkbook.createSheet("TestSheet")).thenReturn(sheet);
 
+        textTransformer.setFormula(cellRef, "SUM(A1:A10)");
 
+        verify(templateWorkbook).createSheet("TestSheet");
+    }
 
-2. Method Call and Verification:
+    @Test
+    public void testSetFormula_RowDoesNotExist() {
+        CellRef cellRef = mock(CellRef.class);
+        when(cellRef.getSheetName()).thenReturn("TestSheet");
+        when(cellRef.getRow()).thenReturn(1);
 
-In the test, we set up behavior for the mocks. For example, when(templateWorkbook.getSheet(sheetName)).thenReturn(destSheet); instructs the mock to return destSheet when getSheet is called on templateWorkbook.
+        when(templateWorkbook.getSheet("TestSheet")).thenReturn(sheet);
+        when(sheet.getRow(1)).thenReturn(null); // Simulate row not existing
 
-After calling textTransformer.removeConditionalFormattingCustom, we verify that setFormattingRanges was called on conditionalFormatting with any CellRangeAddress array.
+        when(sheet.createRow(1)).thenReturn(row);
 
+        textTransformer.setFormula(cellRef, "SUM(A1:A10)");
 
+        verify(sheet).createRow(1);
+    }
 
-3. Customizing AreaRef:
+    @Test
+    public void testSetFormula_CellDoesNotExist() {
+        CellRef cellRef = mock(CellRef.class);
+        when(cellRef.getSheetName()).thenReturn("TestSheet");
+        when(cellRef.getRow()).thenReturn(1);
+        when(cellRef.getCol()).thenReturn(1);
 
-Replace AreaRef(sheetName) with the correct instantiation if AreaRef has different parameters.
+        when(templateWorkbook.getSheet("TestSheet")).thenReturn(sheet);
+        when(sheet.getRow(1)).thenReturn(row);
+        when(row.getCell(1)).thenReturn(null); // Simulate cell not existing
 
+        when(row.createCell(1)).thenReturn(cell);
 
+        textTransformer.setFormula(cellRef, "SUM(A1:A10)");
 
+        verify(row).createCell(1);
+    }
 
-This test uses Mockito to mock dependencies and verify the interactions. Adjustments might be needed
-
-
-
+    @Test
+    public void testSetFormula_SetFormulaOnExistingCell() {
+        CellRef cellRef = mock(CellRef.class);
+        when(cellRef.getSheetName()).
